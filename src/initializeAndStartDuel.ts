@@ -1,10 +1,9 @@
-import { Application, Sprite, Texture } from "pixi.js";
-import { Container3D, Mesh3D, Sprite3D, SpriteBillboardType } from "pixi3d";
+import { Application, Sprite, Texture } from 'pixi.js';
+import { Container3D, Mesh3D, Sprite3D, SpriteBillboardType } from 'pixi3d';
+import { VCard } from './game-client/VCard';
+import { VSpot } from './game-client/VSpot';
 
-interface ICardData {
-  t: string;
-}
-const cards = [
+const cardsProps = [
   { t: `https://public.cx/mmdoc/factions/inferno/103.webp` },
   { t: `https://public.cx/mmdoc/factions/inferno/95.webp` },
   { t: `https://public.cx/mmdoc/factions/inferno/95.webp` },
@@ -18,63 +17,58 @@ const cards = [
   { t: `https://public.cx/mmdoc/factions/inferno/79.webp` },
   { t: `https://public.cx/mmdoc/factions/inferno/58.webp` },
   { t: `https://public.cx/mmdoc/factions/inferno/49.webp` },
-]
-const back_t = `https://public.cx/mmdoc/back/back.webp`;
+];
 
-class VCard extends Container3D {
-  timeElapsed = 0;
-  flippedness = 0;
+const spotsProps = {
+  a1: { x: -1.5, y: -1 },
+  a2: { x: -0.5, y: -1 },
+  a3: { x: 0.5, y: -1 },
+  a4: { x: 1.5, y: -1 },
+  b1: { x: -1.5, y: -2 },
+  b2: { x: -0.5, y: -2 },
+  b3: { x: 0.5, y: -2 },
+  b4: { x: 1.5, y: -2 },
+  deck: { x: -3, y: -1.5 },
+};
 
-  public readonly frontTexture: Texture;
-  public readonly backTexture: Texture;
-  public readonly front: Sprite3D;
-  public readonly back: Sprite3D;
-
-  constructor(public readonly data: ICardData) {
-    super();
-
-    // this.frontTexture = Texture.from(data.t);
-    this.frontTexture = Texture.from(`https://public.cx/mock/cards/bg-0.png`);
-    this.backTexture = Texture.from(back_t);
-
-    this.front = new Sprite3D(this.frontTexture);
-    this.front.anchor.set(0.5, 0.5);
-    this.front.scale.set(0.2, 0.2, 0.2);
-    this.front.rotationQuaternion.setEulerAngles(0, 0, 0);
-    this.front.position.set(0, 0, -.001);
-    this.addChild(this.front);
-
-    this.back = new Sprite3D(this.backTexture);
-    this.back.anchor.set(0.5, 0.5);
-    this.back.scale.set(0.2, 0.2, 0.2);
-    this.back.rotationQuaternion.setEulerAngles(0, 0, 0);
-    this.back.position.set(0, 0, .001);
-    this.addChild(this.back);
-  }
-
-  onEnterFrame() {
-    this.timeElapsed += 0.01;
-    // this.flippedness = Math.sin(this.timeElapsed) * 0.5 + 0.5;
-    this.flippedness = this.timeElapsed % 2;
-    this.rotationQuaternion.setEulerAngles(0, this.flippedness * 180, 0);
-
-    // const showBack = this.flippedness < 0.5;
-    // this.front.texture = showBack ? this.backTexture : this.frontTexture;
-  }
-}
+const MUL_X = 1;
+const MUL_Y = 1.5;
 
 export async function initializeAndStartDuel(app: Application) {
-  for (const card of cards) {
+  const spots: Record<keyof typeof spotsProps, VSpot> = {} as any;
+
+  const propsEntries = Object.entries(spotsProps) as [
+    keyof typeof spotsProps,
+    typeof spotsProps[keyof typeof spotsProps]
+  ][];
+  for (const [spotKey, spotProps] of propsEntries) {
+    const spot = new VSpot(spotProps.x * MUL_X, spotProps.y * MUL_Y);
+    app.stage.addChild(spot);
+
+    spot.arrangeCards = VSpot.arrangeCards_Pile;
+
+    spots[spotKey] = spot;
+  }
+
+  const cards: VCard[] = [];
+
+  for (const card of cardsProps) {
     const vcard = new VCard(card);
     vcard.position.set(Math.random() * 4 - 2, Math.random() * 4 - 2, Math.random() * 4 - 2);
     app.stage.addChild(vcard);
 
-    
+    cards.push(vcard);
 
-    // const texture = Texture.from(card.t);
-    // const sprite = new Sprite(texture);
-    // sprite.x = Math.random() * app.screen.width;
-    // sprite.y = Math.random() * app.screen.height;
-    // app.stage.addChild(sprite);
+    spots.deck.addCard(vcard);
   }
+
+  setInterval(() => {
+    //// Get random card 
+    const card = cards[Math.floor(Math.random() * cards.length)];
+    //// Get random spot
+    const sportsArray = [...Object.values(spots)];
+    const spot = sportsArray[Math.floor(Math.random() * sportsArray.length)];
+
+    spot.addCard(card);
+  }, 25)
 }

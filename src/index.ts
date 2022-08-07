@@ -24,11 +24,18 @@ document.body.appendChild(app.view);
 
 let control = new CameraOrbitControl(app.view);
 
-app.loader.add('assets/chromatic/diffuse.cubemap');
-app.loader.add('assets/chromatic/specular.cubemap');
-app.loader.add('assets/teapot/teapot.gltf');
+// app.loader.add('assets/chromatic/diffuse.cubemap');
+// app.loader.add('assets/chromatic/specular.cubemap');
+// app.loader.add('assets/teapot/teapot.gltf');
 
 app.loader.load((_, resources) => {
+  app.ticker.add(() => callOnEnterFrameRecursively(app.stage));
+
+  initializeAndStartDuel(app);
+});
+
+function addTeapot() {
+  const resources = app.loader.resources;
   let model = app.stage.addChild(Model.from(resources['assets/teapot/teapot.gltf'].gltf));
   model.y = -0.8;
 
@@ -62,10 +69,4 @@ app.loader.load((_, resources) => {
   let pipeline = app.renderer.plugins.pipeline;
   pipeline.enableShadows(ground, shadowCastingLight);
   pipeline.enableShadows(model, shadowCastingLight);
-
-  model.visible = false;
-
-  initializeAndStartDuel(app);
-
-  app.ticker.add(() => callOnEnterFrameRecursively(app.stage));
-});
+}
