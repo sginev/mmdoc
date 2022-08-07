@@ -2,6 +2,7 @@
 
 import { Application, Renderer } from "pixi.js"
 import { CameraOrbitControl, LightingEnvironment, ImageBasedLighting, Model, Mesh3D, Light, LightType, ShadowCastingLight, ShadowQuality } from "pixi3d"
+import { initializeAndStartDuel } from "./initializeAndStartDuel"
 
 let app = new Application({
   backgroundColor: 0xdddddd, resizeTo: window, antialias: true
@@ -44,4 +45,6 @@ app.loader.load((_, resources) => {
   let pipeline = app.renderer.plugins.pipeline
   pipeline.enableShadows(ground, shadowCastingLight)
   pipeline.enableShadows(model, shadowCastingLight)
+
+  initializeAndStartDuel(app);
 })
